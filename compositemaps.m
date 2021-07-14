@@ -1,6 +1,6 @@
-getclimoforuvwandmse=0; %3 hours per year; REDONE #6 MAY 2021
+getclimoforuvwandmse=0; %3 hours per year
 compositedatareadin=0; %with current intervals, 3.5 hours for region 1; 4 hours for region 2; 4 hours for region 3; 10 hours for region 5 when inclnonextr=1
-    regionforcompositestart=2;regionforcompositestop=2; %REDONE #7 MAY 2021; made plots for regs 1-2; have saved reg 3 and 5 (regs 1 and 2 were accidentally erased)
+    regionforcompositestart=2;regionforcompositestop=2; 
     inclnonextr=1; %default is 1 [when 0, above times are about halved]
 producefigs=0; %after reloading, 3 min per region
     needtoreloadformakingmap=1; %about 7 min; necessary if switching the region plotted
@@ -11,68 +11,17 @@ producefigs=0; %after reloading, 3 min per region
     actualoranom='actual'; %'actual' or 'anom'
          
         
-%Previous version of this script (which combined pl and ml data) can be found stored in oldcode.m     
-
-
-icloud='~/Library/Mobile Documents/com~apple~CloudDocs/';
-figloc=strcat(icloud,'General_Academics/Research/Heat_Humidity_Limits/');
-
 regnamesforfigs={'persiangulf';'pakistan';'esasia';'gulfofcalif';'wamazon';'redsea';'naustralia';'midwestus';'caspiansea'};
 
-exist mllats_unrotated;
-if ans==0
-    mllatlonspacing=0.28125;
-    mllat=90-mllatlonspacing/2:-mllatlonspacing:-90+mllatlonspacing/2;
-    mllon=[mllatlonspacing/2:mllatlonspacing:180-mllatlonspacing/2 -180+mllatlonspacing/2:mllatlonspacing:-mllatlonspacing/2];
-    for i=1:1280
-        for j=1:640
-            mllats_unrotated(i,j)=mllat(j);
-            mllons_unrotated(i,j)=mllon(i);
-        end
-    end
-end
 gothru=[9;8;9;7;8;9;9;8;9];
 windlev=12;
 
-exist elevera5;
-if ans==0
-    setup_nctoolbox;
-    temp=ncread('elevera5.nc','z');elevera5=(squeeze(temp(:,:,1))./9.81)';elevera5=[elevera5(:,721:1440) elevera5(:,1:720)];
-end
-
-exist era5latarray;
-if ans==0
-    temp=load(strcat(icloud,'General_Academics/Research/Basics/Basics_ERA5/latlonarray'));era5latarray=temp.latarray;era5lonarray=temp.lonarray;
-        era5lonarray=[era5lonarray(:,721:1440) era5lonarray(:,1:720)];
-end
 
 exist arrwithallp999;
 if ans==0
-    temp=load('/Volumes/ExternalDriveZ/ERA5_Hourly_Data/toppctilestats');arrwithallp999=temp.arrwithallp999;arrwithallp99=temp.arrwithallp99;
+    temp=load(strcat(processedera5dir,'toppctilestats'));arrwithallp999=temp.arrwithallp999;arrwithallp99=temp.arrwithallp99;
 end
 
-exist actualrowstarts;
-if ans==0
-    %Latitude/longitude bounds for each region
-    regsouthbounds=[18.5;21.5;15;23.25;-18.75;13;-21;28;33];regnorthbounds=[35;38;27.5;28.75;-2.5;26;-11;50;49];
-    regwestbounds=[43.5;62.5;78.75;-110;-75;34;133;-103;44];regeastbounds=[62.25;77.25;98.75;-104.5;-61.25;44;143;-82;60];
-    actualrowstarts=[221;209;251;246;371;257;405;161;165];actualrowstops=[287;275;301;268;436;309;445;249;229];
-    actualcolstarts=[894.5;970.5;1035.5;280.5;420.5;856.5;1252.5;308.5;897.5];actualcolstops=[969.5;1029.5;1115.5;302.5;475.5;896.5;1292.5;392.5;960.5];
-    actualcolstartsalt=[174.5;250.5;315.5;1000.5;1140.5;136.5;532.5;1028.5;177.5];actualcolstopsalt=[249.5;309.5;395.5;1022.5;1195.5;176.5;572.5;1112.5;240.5];
-    %Regional bounds using unrotated regional-subset model-level grid
-    mlstartrows=[156;223;281;890;1014;122;474];mlstoprows=[221;275;351;908;1062;156;508]; %using mllons_unrotated
-    mlstartcols=[197;186;223;219;330;229;360];mlstopcols=[254;244;267;237;387;274;395]; %using mllats_unrotated
-    
-    %Using pressurefromelev.m:
-    avgelevs_era5levs=[11700;9050;5470;2900;1350;880;430;213;0];
-    avgelevs_soundinglevs=[11700;9050;5470;2900;1350;880;430;213;127;42];
-    avgelevs_mllevs=[11700;9100;5550;3000;1450;970;480;310;180;100;45;0];
-
-    pressures_forml=[200;300;500;700;850;900;954;975;990;1000;1006;1012];
-    mlevels=[10;54;107;205;334;501;987;1460;3000;5500;9100;11700]; %approximate heights above ground, in meters
-    mls_retrieved=[74;83;96;105;114;118;124;127;130;133;135;137]; %ordinates of retrieved levels, spanning from 200 to sfc (or more, when sfc is above sea level)
-    mls_retrieved_uvw=[74;83;96;100;[105:137]'];%mls_retrieved_uvw=mls_retrieved;
-end
 
 
 %Reminder of region boundaries:
@@ -89,8 +38,7 @@ end
     %Persian Gulf -- 18.5-35 N, 43.5-62.25 E
     %Pakistan -- 21.5-38 N, 62.5-77.25 E
     
-%Some model-level data is at 281x1161 resolution, which is offset by 200
-    %rows and 200 columns from regular 720x1440 ERA5 array dimensions
+%Some model-level data is at 281x1161 resolution, which is offset by 200 rows and 200 columns from regular 720x1440 ERA5 array dimensions
   
     
     
@@ -99,12 +47,12 @@ if getclimoforuvwandmse==1
     monstarts=[1;32;60;91;121;152;182;213;244;274;305;335];
     monstops=[31;59;90;120;151;181;212;243;273;304;334;365];
     
-    bigureg1=[];bigvreg1=[];bigwreg1=[];bigmsereg1=[];bigmse2mreg1=[];bigstabilreg1=[];bigureg2=[];bigvreg2=[];bigwreg2=[];bigmsereg2=[];bigmse2mreg2=[];bigstabilreg2=[];
-    bigureg3=[];bigvreg3=[];bigwreg3=[];bigmsereg3=[];bigmse2mreg3=[];bigstabilreg3=[];bigureg5=[];bigvreg5=[];bigwreg5=[];bigmsereg5=[];bigmse2mreg5=[];bigstabilreg5=[];
+    bigureg1=[];bigvreg1=[];bigwreg1=[];bigmsereg1=[];bigmse2mreg1=[];bigureg2=[];bigvreg2=[];bigwreg2=[];bigmsereg2=[];bigmse2mreg2=[];
+    bigureg3=[];bigvreg3=[];bigwreg3=[];bigmsereg3=[];bigmse2mreg3=[];bigureg5=[];bigvreg5=[];bigwreg5=[];bigmsereg5=[];bigmse2mreg5=[];
             
-    for thisyear=2016:2017
+    for thisyear=2009:2018
         %For MSE using 2-m data
-        ttdfile=ncgeodataset(strcat('/Volumes/ExternalDriveZ/ERA5_Hourly_Data/ttd_world_',num2str(thisyear),'.grib'));
+        ttdfile=ncgeodataset(strcat(mainera5dir,'ttd_world_',num2str(thisyear),'.grib'));
         psfcfile=ncgeodataset(strcat('/Volumes/ExternalDriveC/ERA5_Hourly_Data_PandGHonly/psfc_world_',num2str(thisyear),'.grib'));
         pblhfile=ncgeodataset(strcat('/Volumes/ExternalDriveC/ERA5_Hourly_Data_PBLheight_only/pblh_world_',num2str(thisyear),'.grib'));
         
@@ -199,7 +147,6 @@ if getclimoforuvwandmse==1
                         vp=calcvpfromTd(td2mforyear);
                         mr=622.197.*(vp./(psfcforyear-vp))./1000;
                         omega=calcqfromTd_dynamicP(td2mforyear,psfcforyear);clear td2mforyear; %convert to unitless specific humidity
-                        %cp=1005.7.*(1+1.83.*mr);clear mr; %J K^-1 kg^-1; Stull, Practical Meteorology
                         cp=(1005.7.*(1-mr))+(mr.*(1-mr).*1850);clear mr;
                         qh2mforyear=cp.*t2mforyear;clear cp;
                         lv=1918.46.*((t2mforyear./(t2mforyear-33.91)).^2);clear t2mforyear; %J/kg; Henderson-Sellers 1984
@@ -264,7 +211,6 @@ if getclimoforuvwandmse==1
                     mr=622.197.*(vp./(pressures_forml_rep-vp))./1000;
                     omega=calcqfromTd_dynamicP(td,pressures_forml_rep.*100); %convert to unitless specific humidity
                     omega_sat=calcqfromTd_dynamicP(t-273.15,pressures_forml_rep.*100);
-                    %cp=1005.7.*(1+1.83.*mr);clear mr; %J K^-1 kg^-1; Stull, Practical Meteorology
                     cp=(1005.7.*(1-mr))+(mr.*(1-mr).*1850);clear mr;
                     qh=cp.*t;clear cp;
                     lv=1918.46.*((t./(t-33.91)).^2); %J/kg; Henderson-Sellers 1984
@@ -302,70 +248,22 @@ if getclimoforuvwandmse==1
                     mse2m=mse2m_here;pblh=pblh_here;
                     clear mse2m_here;clear pblh_here;
                     
-                    
-                    %Compute stability ('lid strength') as the difference between the 2-m
-                        %MSE and the maximum *saturated* MSE between the top of the PBL and 500 mb
-                    maxsatmse=NaN.*ones(size(mse2m,1),size(mse2m,2),size(mse2m,3));
-                    stabil=NaN.*ones(size(mse2m,1),size(mse2m,2),size(mse2m,3));
-                    for x1=1:size(mse2m,1)
-                        for x2=1:size(mse2m,2)
-                            for x3=1:size(mse2m,3)
-                                thesezs=z_ml(x1,:,x2,x3);
-                                thispblh=pblh(x1,x2,x3);
-                                if ~sum(~isnan(thesezs)==0)
-                                    [~,indoflast]=find(thesezs>thispblh,1,'last');
-                                    if indoflast>=3 %i.e. if PBL height is lower in the atmosphere than 500 mb
-                                        maxsatmse(x1,x2,x3)=max(mse_sat(x1,3:indoflast,x2,x3));
-                                        stabil(x1,x2,x3)=maxsatmse(x1,x2,x3)-mse2m(x1,x2,x3);
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    docheck=0;
-                    if docheck==1
-                        figure(55);clf;
-                        plot(flipud(squeeze(mean(mse_sat(:,:,22,44)))'),1:12,'r','linewidth',2);hold on;
-                        plot(flipud(squeeze(mean(mse(:,:,22,44)))'),1:12,'b','linewidth',2);
-                        set(gca,'fontsize',12,'fontweight','bold','fontname','arial');
-                        set(gca,'yticklabel',{'';'60';'225';'500';'1500';'5500';'12000'});
-                        title('Desert near 23N, 49E (May 2014 mean)','fontsize',16,'fontweight','bold','fontname','arial');
-                        ylabel('Altitude Above Ground (m)','fontsize',14,'fontweight','bold','fontname','arial');
-                        xlabel('MSE or Saturated MSE (kJ/kg)','fontsize',14,'fontweight','bold','fontname','arial');
-                        
-                        plot(320:10:410,6.8.*ones(1,10),'color','k','linestyle','--','linewidth',2);
-                        %t=text(0.76,0.93,'Mean PBL height: 854 m','units','normalized');set(t,'fontsize',14,'fontweight','bold','fontname','arial');
-                        %mean(pblh(:,22,44)) %854 m
-                        
-                        
-                        figure(56);clf;
-                        plot(flipud(squeeze(mean(mse_sat(:,:,35,36)))'),1:12,'r','linewidth',2);hold on;
-                        plot(flipud(squeeze(mean(mse(:,:,35,36)))'),1:12,'b','linewidth',2);
-                        set(gca,'fontsize',12,'fontweight','bold','fontname','arial');
-                        set(gca,'yticklabel',{'';'60';'225';'500';'1500';'5500';'12000'});
-                        title('Persian Gulf near 25N, 53E (May 2014 mean)','fontsize',16,'fontweight','bold','fontname','arial');
-                        ylabel('Altitude Above Ground (m)','fontsize',14,'fontweight','bold','fontname','arial');
-                        xlabel('MSE or Saturated MSE (kJ/kg)','fontsize',14,'fontweight','bold','fontname','arial');
-                        
-                        %plot(320:10:410,6.8.*ones(1,10),'color','k','linestyle','--','linewidth',2);
-                    end
-                    
 
                     if regloop==1
                         bigureg1=cat(1,bigureg1,u);bigvreg1=cat(1,bigvreg1,v);bigwreg1=cat(1,bigwreg1,w);bigmsereg1=cat(1,bigmsereg1,mse);
-                        bigmse2mreg1=cat(1,bigmse2mreg1,mse2m);bigstabilreg1=cat(1,bigstabilreg1,stabil);
+                        bigmse2mreg1=cat(1,bigmse2mreg1,mse2m);
                     elseif regloop==2
                         bigureg2=cat(1,bigureg2,u);bigvreg2=cat(1,bigvreg2,v);bigwreg2=cat(1,bigwreg2,w);bigmsereg2=cat(1,bigmsereg2,mse);
-                        bigmse2mreg2=cat(1,bigmse2mreg2,mse2m);bigstabilreg2=cat(1,bigstabilreg2,stabil);
+                        bigmse2mreg2=cat(1,bigmse2mreg2,mse2m);
                     elseif regloop==3
                         bigureg3=cat(1,bigureg3,u);bigvreg3=cat(1,bigvreg3,v);bigwreg3=cat(1,bigwreg3,w);bigmsereg3=cat(1,bigmsereg3,mse);
-                        bigmse2mreg3=cat(1,bigmse2mreg3,mse2m);bigstabilreg3=cat(1,bigstabilreg3,stabil);
+                        bigmse2mreg3=cat(1,bigmse2mreg3,mse2m);
                     elseif regloop==5
                         bigureg5=cat(1,bigureg5,u);bigvreg5=cat(1,bigvreg5,v);bigwreg5=cat(1,bigwreg5,w);bigmsereg5=cat(1,bigmsereg5,mse);
-                        bigmse2mreg5=cat(1,bigmse2mreg5,mse2m);bigstabilreg5=cat(1,bigstabilreg5,stabil);
+                        bigmse2mreg5=cat(1,bigmse2mreg5,mse2m);
                     end
 
-                    clear u;clear v;clear w;clear mse;clear mse2m;clear stabil;
+                    clear u;clear v;clear w;clear mse;clear mse2m;
                 end
                 end
             end
@@ -401,21 +299,14 @@ if getclimoforuvwandmse==1
     bigmse2mreg3new=reshape(bigmse2mreg3,[8,size(bigmse2mreg3,1)/8,size(bigmse2mreg3,2),size(bigmse2mreg3,3),size(bigmse2mreg3,4)]);clear bigmse2mreg3;
     bigmse2mreg5new=reshape(bigmse2mreg5,[8,size(bigmse2mreg5,1)/8,size(bigmse2mreg5,2),size(bigmse2mreg5,3),size(bigmse2mreg5,4)]);clear bigmse2mreg5;
     
-    bigstabilreg1new=reshape(bigstabilreg1,[8,size(bigstabilreg1,1)/8,size(bigstabilreg1,2),size(bigstabilreg1,3),size(bigstabilreg1,4)]);clear bigstabilreg1;
-    bigstabilreg2new=reshape(bigstabilreg2,[8,size(bigstabilreg2,1)/8,size(bigstabilreg2,2),size(bigstabilreg2,3),size(bigstabilreg2,4)]);clear bigstabilreg2;
-    bigstabilreg3new=reshape(bigstabilreg3,[8,size(bigstabilreg3,1)/8,size(bigstabilreg3,2),size(bigstabilreg3,3),size(bigstabilreg3,4)]);clear bigstabilreg3;
-    bigstabilreg5new=reshape(bigstabilreg5,[8,size(bigstabilreg5,1)/8,size(bigstabilreg5,2),size(bigstabilreg5,3),size(bigstabilreg5,4)]);clear bigstabilreg5;
-    
     uclimoreg1=squeeze(mean(bigureg1new,2));uclimoreg2=squeeze(mean(bigureg2new,2));uclimoreg3=squeeze(mean(bigureg3new,2));uclimoreg5=squeeze(mean(bigureg5new,2));
     vclimoreg1=squeeze(mean(bigvreg1new,2));vclimoreg2=squeeze(mean(bigvreg2new,2));vclimoreg3=squeeze(mean(bigvreg3new,2));vclimoreg5=squeeze(mean(bigvreg5new,2));
     wclimoreg1=squeeze(mean(bigwreg1new,2));wclimoreg2=squeeze(mean(bigwreg2new,2));wclimoreg3=squeeze(mean(bigwreg3new,2));wclimoreg5=squeeze(mean(bigwreg5new,2));
     mseclimoreg1=squeeze(mean(bigmsereg1new,2));mseclimoreg2=squeeze(mean(bigmsereg2new,2));mseclimoreg3=squeeze(mean(bigmsereg3new,2));mseclimoreg5=squeeze(mean(bigmsereg5new,2));
     mse2mclimoreg1=squeeze(mean(bigmse2mreg1new,2));mse2mclimoreg2=squeeze(mean(bigmse2mreg2new,2));mse2mclimoreg3=squeeze(mean(bigmse2mreg3new,2));mse2mclimoreg5=squeeze(mean(bigmse2mreg5new,2));
-    stabilclimoreg1=squeeze(mean(bigstabilreg1new,2));stabilclimoreg2=squeeze(mean(bigstabilreg2new,2));stabilclimoreg3=squeeze(mean(bigstabilreg3new,2));stabilclimoreg5=squeeze(mean(bigstabilreg5new,2));
-    save('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/climoforcompositesMAY2021.mat','uclimoreg1','uclimoreg2','uclimoreg3','uclimoreg5',...
+    save(strcat(processedera5dir,'climoforcompositesMAY2021.mat'),'uclimoreg1','uclimoreg2','uclimoreg3','uclimoreg5',...
         'vclimoreg1','vclimoreg2','vclimoreg3','vclimoreg5','wclimoreg1','wclimoreg2','wclimoreg3','wclimoreg5',...
-        'mseclimoreg1','mseclimoreg2','mseclimoreg3','mseclimoreg5','mse2mclimoreg1','mse2mclimoreg2','mse2mclimoreg3','mse2mclimoreg5',...
-        'stabilclimoreg1','stabilclimoreg2','stabilclimoreg3','stabilclimoreg5');
+        'mseclimoreg1','mseclimoreg2','mseclimoreg3','mseclimoreg5','mse2mclimoreg1','mse2mclimoreg2','mse2mclimoreg3','mse2mclimoreg5');
     
     
     clear tmltemp;clear qmltemp;clear ttemp;clear utemp;clear vtemp;clear wtemp;
@@ -425,8 +316,6 @@ if getclimoforuvwandmse==1
     clear bigmsereg1new;clear bigmsereg2new;clear bigmsereg3new;clear bigmsereg5new;
     clear bigmse2mreg1new;clear bigmse2mreg2new;clear bigmse2mreg3new;clear bigmse2mreg5new;
     clear mse2mforyearreg1;clear mse2mforyearreg2;clear mse2mforyearreg3;clear mse2mforyearreg5;
-    %clear bigstabilreg1new;clear bigstabilreg2new;clear bigstabilreg3new;clear bigstabilreg5new;
-    %clear stabilforyearreg1;clear stabilforyearreg2;clear stabilforyearreg3;clear stabilforyearreg5;
     clear pblhforyearreg1;clear pblhforyearreg2;clear pblhforyearreg3;clear pblhforyearreg5;
     clear psfcforyearreg1;clear psfcforyearreg2;clear psfcforyearreg3;clear psfcforyearreg5;
 end
@@ -439,41 +328,32 @@ if compositedatareadin==1
             fnameadd='';
             if regloop==1
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2013;stopyear=2018;
                 interval=4; %every nth day (for speed); 30 for all of PG, 4 for south shore only, 2 for Abu Dhabi box only
                 fnameadd='_EXP';
             elseif regloop==2
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2013;stopyear=2018;
                 interval=5; %default: 5
                 fnameadd='_EXP';
             elseif regloop==3
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2013;stopyear=2018;
                 interval=20;
             elseif regloop==4
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2009;stopyear=2018;
                 interval=5;
             elseif regloop==5
                 regiontoplot=regname;firstmonth=11;lastmonth=2;
-                startyear=2013;stopyear=2018;
                 interval=5;
             elseif regloop==6
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2015;stopyear=2018;
                 interval=10; %every nth day
             elseif regloop==7
                 regiontoplot=regname;firstmonth=11;lastmonth=2;
-                startyear=2010;stopyear=2018;
                 interval=1;
             elseif regloop==8
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2011;stopyear=2018;
                 interval=1;
             elseif regloop==9
                 regiontoplot=regname;firstmonth=5;lastmonth=9;
-                startyear=2014;stopyear=2018;
                 interval=1;
             end
             
@@ -500,12 +380,6 @@ if compositedatareadin==1
                 era5colstart_forplotting=era5colstart+720;era5colstop_forplotting=era5colstop+720;
             end
             
-            
-            exist elevera5;
-            if ans==0
-                temp=ncread('elevera5.nc','z');elevera5=(squeeze(temp(:,:,1))./9.81)';
-                elevera5=[elevera5(:,721:1440) elevera5(:,1:720)];
-            end
 
             
             %Subset to get only days in the years and region of interest
@@ -599,7 +473,7 @@ if compositedatareadin==1
                                    
 
                                 %For MSE using 2-m data
-                                file=ncgeodataset(strcat('/Volumes/ExternalDriveZ/ERA5_Hourly_Data/ttd_world_',num2str(thisyear),'.grib'));
+                                file=ncgeodataset(strcat(mainera5dir,'ttd_world_',num2str(thisyear),'.grib'));
                                 psfcfile=ncgeodataset(strcat('/Volumes/ExternalDriveC/ERA5_Hourly_Data_PandGHonly/psfc_world_',num2str(thisyear),'.grib'));
                                 ttemp=file{'2_metre_temperature_surface'};echo off;
                                     t2m=double(ttemp.data(:,era5rowstart:era5rowstop,era5colstart_forplotting-0.5:era5colstop_forplotting+0.5));clear ttemp;
@@ -624,7 +498,6 @@ if compositedatareadin==1
                                 vp=calcvpfromTd(td2mforyear);
                                 mr=622.197.*(vp./(psfcforyear-vp))./1000;
                                 omega=calcqfromTd_dynamicP(td2mforyear,psfcforyear); %convert to unitless specific humidity
-                                %cp=1005.7.*(1+1.83.*mr);clear mr; %J K^-1 kg^-1; Stull, Practical Meteorology
                                 cp=(1005.7.*(1-mr))+(mr.*(1-mr).*1850);clear mr;
                                 qh2mforyear=cp.*t2mforyear;clear cp;
                                 lv=1918.46.*((t2mforyear./(t2mforyear-33.91)).^2); %J/kg; Henderson-Sellers 1984
@@ -745,7 +618,6 @@ if compositedatareadin==1
                             vp=calcvpfromTd(td)./100; %in hPa
                             mr=622.197.*(vp./(pressures_forml_rep-vp))./1000;
                             omega=calcqfromTd_dynamicP(td,pressures_forml_rep.*100); %convert to unitless specific humidity
-                            %cp=1005.7.*(1+1.83.*mr);clear mr; %J K^-1 kg^-1; Stull, Practical Meteorology
                             cp=(1005.7.*(1-mr))+(mr.*(1-mr).*1850);clear mr;
                             qh=cp.*t;clear cp;
                             lv=1918.46.*((t./(t-33.91)).^2); %J/kg; Henderson-Sellers 1984
@@ -757,103 +629,13 @@ if compositedatareadin==1
                             vp=calcvpfromTd(td_nonextr)./100; %in hPa
                             mr=622.197.*(vp./(pressures_forml_rep-vp))./1000;clear vp;
                             omega=calcqfromTd_dynamicP(td_nonextr,pressures_forml_rep.*100); %convert to unitless specific humidity
-                            %cp=1005.7.*(1+1.83.*mr);clear mr; %J K^-1 kg^-1; Stull, Practical Meteorology
                             cp=(1005.7.*(1-mr))+(mr.*(1-mr).*1850);clear mr;
                             qh_nonextr=cp.*t_nonextr;clear cp;
                             lv=1918.46.*((t_nonextr./(t_nonextr-33.91)).^2); %J/kg; Henderson-Sellers 1984
                             ql_nonextr=lv.*omega;clear lv;clear omega; %J/kg
                             mse_nonextr=(qh_nonextr+ql_nonextr+9.81.*z_ml_nonextr)./1000;
                             end
-                                
-
-                            %Column-wise averaging
-                            dothis=0;
-                            if dothis==1
-                            if regloop~=9
-                            newa=0;clear newt;clear newt_nonextr;
-                            for a=2:size(t,4)
-                                newa=newa+1;
-                                newt(:,:,:,newa)=squeeze(mean(t(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newt_nonextr(:,:,:,newa)=squeeze(mean(t_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            t=newt;clear newt;if inclnonextr==1;t_nonextr=newt_nonextr;clear newt_nonextr;end
-                            
-                            newa=0;clear newtd;clear newtd_nonextr;
-                            for a=2:size(td,4)
-                                newa=newa+1;
-                                newtd(:,:,:,newa)=squeeze(mean(td(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newtd_nonextr(:,:,:,newa)=squeeze(mean(td_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            td=newtd;clear newtd;if inclnonextr==1;td_nonextr=newtd_nonextr;clear newtd_nonextr;end
-                            
-                            newa=0;clear newq;clear newq_nonextr;
-                            for a=2:size(q,4)
-                                newa=newa+1;
-                                newq(:,:,:,newa)=squeeze(mean(q(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newq_nonextr(:,:,:,newa)=squeeze(mean(q_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            q=newq;clear newq;if inclnonextr==1;q_nonextr=newq_nonextr;clear newq_nonextr;end
-                                
-                            newa=0;clear newu;clear newu_nonextr;
-                            for a=2:size(gh,4)
-                                newa=newa+1;
-                                newu(:,:,:,newa)=squeeze(mean(u(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newu_nonextr(:,:,:,newa)=squeeze(mean(u_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            u=newu;clear newu;if inclnonextr==1;u_nonextr=newu_nonextr;clear newu_nonextr;end
-                            
-                            newa=0;clear newv;clear newv_nonextr;
-                            for a=2:size(v,4)
-                                newa=newa+1;
-                                newv(:,:,:,newa)=squeeze(mean(v(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newv_nonextr(:,:,:,newa)=squeeze(mean(v_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            v=newv;clear newv;if inclnonextr==1;v_nonextr=newv_nonextr;clear newv_nonextr;end
-                            
-                            newa=0;clear neww;clear neww_nonextr;
-                            for a=2:size(w,4)
-                                newa=newa+1;
-                                neww(:,:,:,newa)=squeeze(mean(w(:,:,:,a-1:a),4));
-                                if inclnonextr==1;neww_nonextr(:,:,:,newa)=squeeze(mean(w_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            w=neww;clear neww;if inclnonextr==1;w_nonextr=neww_nonextr;clear neww_nonextr;end
-                            
-                            newa=0;clear newgh;clear newgh_nonextr;
-                            for a=2:size(gh,4)
-                                newa=newa+1;
-                                newgh(:,:,:,newa)=squeeze(mean(gh(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newgh_nonextr(:,:,:,newa)=squeeze(mean(gh_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            gh=newgh;clear newgh;if inclnonextr==1;gh_nonextr=newgh_nonextr;clear newgh_nonextr;end
-                            
-                            newa=0;clear newmse;clear newmse_nonextr;
-                            for a=2:size(mse,4)
-                                newa=newa+1;
-                                newmse(:,:,:,newa)=squeeze(mean(mse(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newmse_nonextr(:,:,:,newa)=squeeze(mean(mse_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            mse=newmse;clear newmse;if inclnonextr==1;mse_nonextr=newmse_nonextr;clear newmse_nonextr;end
-                            
-                            newa=0;clear newqh;clear newqh_nonextr;
-                            for a=2:size(qh,4)
-                                newa=newa+1;
-                                newqh(:,:,:,newa)=squeeze(mean(qh(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newqh_nonextr(:,:,:,newa)=squeeze(mean(qh_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            qh=newqh;clear newqh;if inclnonextr==1;qh_nonextr=newqh_nonextr;clear newqh_nonextr;end
-                            
-                            newa=0;clear newql;clear newql_nonextr;
-                            for a=2:size(ql,4)
-                                newa=newa+1;
-                                newql(:,:,:,newa)=squeeze(mean(ql(:,:,:,a-1:a),4));
-                                if inclnonextr==1;newql_nonextr(:,:,:,newa)=squeeze(mean(ql_nonextr(:,:,:,a-1:a),4));end
-                            end
-                            ql=newql;clear newql;if inclnonextr==1;ql_nonextr=newql_nonextr;clear newql_nonextr;end
-                            
-                            end
-                            end
-
-                            
+                               
 
                                                         
                             %Interpolate u, v, w, gh, Psfc, and MSE/Qh/Ql (if necessary) to the main model lat/lon grid 
@@ -948,17 +730,6 @@ if compositedatareadin==1
                             end;end;end
                             hourofmax=thea;
                             if inclnonextr==1;hourofmax_nonextr=thea_nonextr;end
-                            %alternative: hour of max averaged across region on this day
-                            %thisdaydata=mse2m(17:24,:,:);
-                            %hourofmaxarray=NaN.*ones(size(mse2m,2),size(mse2m,3));
-                            %for a=1:size(mse2m,2)
-                            %    for b=1:size(mse2m,3)
-                            %        if sum(isnan(thisdaydata(:,a,b)))==0
-                            %            [~,hourofmaxarray(a,b)]=max(thisdaydata(:,a,b));
-                            %        end
-                            %    end
-                            %end
-                            %hourofmax=round(mean(mean(hourofmaxarray,'omitnan'),'omitnan')+16);
 
 
                             extremec=extremec+1;
@@ -1018,10 +789,9 @@ if compositedatareadin==1
             clear gh_nonextr;clear bigu_nonextr;clear bigv_nonextr;clear bigw_nonextr;clear biggh_nonextr;clear bigmse_nonextr;clear bigqh_nonextr;clear bigql_nonextr;
             clear bigt_nonextr;clear bigtd_nonextr;clear bigmsem2m_nonextr;clear bigqh2m_nonextr;clear bigql2m_nonextr;clear bigt2m_nonextr;clear bigtd2m_nonextr;
                              
-            disp('Beginning to save at line 1012');
+            disp('Beginning to save at line 800');
             %Saving everything for extremes takes multiple hours -->
                 %instead, save to local disk and then manually transfer to external drive as necessary
-            %save(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ghtosave_',regname,'.mat'),'ghtosave');
             t=ghtosave{regloop};save(strcat('ghtosave_',regname,'.mat'),'t');
             t=msetosave{regloop};save(strcat('msetosave_',regname,'.mat'),'t');
             t=qhtosave{regloop};save(strcat('qhtosave_',regname,'.mat'),'t');
@@ -1046,8 +816,7 @@ if compositedatareadin==1
             t=elevsarray;save(strcat('elevsarraytosave_',regname,'.mat'),'t');
             
             
-            %This saving is rather slow, about 2 hours total
-            %NEW APPROACH: ONLY ~1 hour
+            %This saving is rather slow, about 1 hour
             if inclnonextr==1
                 t=ghtosave_nonextr{regloop};save(strcat('ghtosave_nonextr_',regname,'.mat'),'t');
                 t=msetosave_nonextr{regloop};save(strcat('msetosave_nonextr_',regname,'.mat'),'t');
@@ -1088,7 +857,7 @@ end
 if producefigs==1
     exist uclimoreg1;
     if ans==0      
-        temp=load('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/climoforcompositesMAY2021.mat');
+        temp=load(strcat(processedera5dir,'climoforcompositesMAY2021.mat'));
         uclimoreg1=temp.uclimoreg1;uclimoreg2=temp.uclimoreg2;uclimoreg3=temp.uclimoreg3;uclimoreg5=temp.uclimoreg5;
         vclimoreg1=temp.vclimoreg1;vclimoreg2=temp.vclimoreg2;vclimoreg3=temp.vclimoreg3;vclimoreg5=temp.vclimoreg5;
         wclimoreg1=temp.wclimoreg1;wclimoreg2=temp.wclimoreg2;wclimoreg3=temp.wclimoreg3;wclimoreg5=temp.wclimoreg5;
@@ -1102,48 +871,48 @@ if producefigs==1
         regname=regnamesforfigs{regloop};
         
         if needtoreloadformakingmap==1
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ghtosave_',regname,'.mat'));ghtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/msetosave_',regname,'.mat'));msetosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qhtosave_',regname,'.mat'));qhtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qltosave_',regname,'.mat'));qltosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ttosave_',regname,'.mat'));ttosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/tdtosave_',regname,'.mat'));tdtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/mse2mtosave_',regname,'.mat'));mse2mtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qh2mtosave_',regname,'.mat'));qh2mtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ql2mtosave_',regname,'.mat'));ql2mtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/t2mtosave_',regname,'.mat'));t2mtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/td2mtosave_',regname,'.mat'));td2mtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/homarraytosave_',regname,'.mat'));homarraytosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/yeartosave_',regname,'.mat'));yeartosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/doyheretosave_',regname,'.mat'));doyheretosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/mllatgridtosave_',regname,'.mat'));mllatgridtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/mllongridtosave_',regname,'.mat'));mllongridtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/presmltosave_',regname,'.mat'));presmltosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/zmltosave_',regname,'.mat'));zmltosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/elevsarraytosave_',regname,'.mat'));elevsarray=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/utosave_',regname,'.mat'));utosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/vtosave_',regname,'.mat'));vtosave=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/wtosave_',regname,'.mat'));wtosave=temp.t;
+            temp=load(strcat(processedera5dir,'ghtosave_',regname,'.mat'));ghtosave=temp.t;
+            temp=load(strcat(processedera5dir,'msetosave_',regname,'.mat'));msetosave=temp.t;
+            temp=load(strcat(processedera5dir,'qhtosave_',regname,'.mat'));qhtosave=temp.t;
+            temp=load(strcat(processedera5dir,'qltosave_',regname,'.mat'));qltosave=temp.t;
+            temp=load(strcat(processedera5dir,'ttosave_',regname,'.mat'));ttosave=temp.t;
+            temp=load(strcat(processedera5dir,'tdtosave_',regname,'.mat'));tdtosave=temp.t;
+            temp=load(strcat(processedera5dir,'mse2mtosave_',regname,'.mat'));mse2mtosave=temp.t;
+            temp=load(strcat(processedera5dir,'qh2mtosave_',regname,'.mat'));qh2mtosave=temp.t;
+            temp=load(strcat(processedera5dir,'ql2mtosave_',regname,'.mat'));ql2mtosave=temp.t;
+            temp=load(strcat(processedera5dir,'t2mtosave_',regname,'.mat'));t2mtosave=temp.t;
+            temp=load(strcat(processedera5dir,'td2mtosave_',regname,'.mat'));td2mtosave=temp.t;
+            temp=load(strcat(processedera5dir,'homarraytosave_',regname,'.mat'));homarraytosave=temp.t;
+            temp=load(strcat(processedera5dir,'yeartosave_',regname,'.mat'));yeartosave=temp.t;
+            temp=load(strcat(processedera5dir,'doyheretosave_',regname,'.mat'));doyheretosave=temp.t;
+            temp=load(strcat(processedera5dir,'mllatgridtosave_',regname,'.mat'));mllatgridtosave=temp.t;
+            temp=load(strcat(processedera5dir,'mllongridtosave_',regname,'.mat'));mllongridtosave=temp.t;
+            temp=load(strcat(processedera5dir,'presmltosave_',regname,'.mat'));presmltosave=temp.t;
+            temp=load(strcat(processedera5dir,'zmltosave_',regname,'.mat'));zmltosave=temp.t;
+            temp=load(strcat(processedera5dir,'elevsarraytosave_',regname,'.mat'));elevsarray=temp.t;
+            temp=load(strcat(processedera5dir,'utosave_',regname,'.mat'));utosave=temp.t;
+            temp=load(strcat(processedera5dir,'vtosave_',regname,'.mat'));vtosave=temp.t;
+            temp=load(strcat(processedera5dir,'wtosave_',regname,'.mat'));wtosave=temp.t;
 
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ghtosave_nonextr_',regname,'.mat'));ghtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/msetosave_nonextr_',regname,'.mat'));msetosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qhtosave_nonextr_',regname,'.mat'));qhtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qltosave_nonextr_',regname,'.mat'));qltosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ttosave_nonextr_',regname,'.mat'));ttosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/tdtosave_nonextr_',regname,'.mat'));tdtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/mse2mtosave_nonextr_',regname,'.mat'));mse2mtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/qh2mtosave_nonextr_',regname,'.mat'));qh2mtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/ql2mtosave_nonextr_',regname,'.mat'));ql2mtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/t2mtosave_nonextr_',regname,'.mat'));t2mtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/td2mtosave_nonextr_',regname,'.mat'));td2mtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/homarraytosave_nonextr_',regname,'.mat'));homarraytosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/yeartosave_nonextr_',regname,'.mat'));yeartosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/doyheretosave_nonextr_',regname,'.mat'));doyheretosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/presmltosave_nonextr_',regname,'.mat'));presmltosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/zmltosave_nonextr_',regname,'.mat'));zmltosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/utosave_nonextr_',regname,'.mat'));utosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/vtosave_nonextr_',regname,'.mat'));vtosave_nonextr=temp.t;
-            temp=load(strcat('/Volumes/ExternalDriveZ/ERA5_HHLcalcs/wtosave_nonextr_',regname,'.mat'));wtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'ghtosave_nonextr_',regname,'.mat'));ghtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'msetosave_nonextr_',regname,'.mat'));msetosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'qhtosave_nonextr_',regname,'.mat'));qhtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'qltosave_nonextr_',regname,'.mat'));qltosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'ttosave_nonextr_',regname,'.mat'));ttosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'tdtosave_nonextr_',regname,'.mat'));tdtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'mse2mtosave_nonextr_',regname,'.mat'));mse2mtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'qh2mtosave_nonextr_',regname,'.mat'));qh2mtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'ql2mtosave_nonextr_',regname,'.mat'));ql2mtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'t2mtosave_nonextr_',regname,'.mat'));t2mtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'td2mtosave_nonextr_',regname,'.mat'));td2mtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'homarraytosave_nonextr_',regname,'.mat'));homarraytosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'yeartosave_nonextr_',regname,'.mat'));yeartosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'doyheretosave_nonextr_',regname,'.mat'));doyheretosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'presmltosave_nonextr_',regname,'.mat'));presmltosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'zmltosave_nonextr_',regname,'.mat'));zmltosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'utosave_nonextr_',regname,'.mat'));utosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'vtosave_nonextr_',regname,'.mat'));vtosave_nonextr=temp.t;
+            temp=load(strcat(processedera5dir,'wtosave_nonextr_',regname,'.mat'));wtosave_nonextr=temp.t;
         end
         
         
@@ -1422,7 +1191,6 @@ if producefigs==1
         %Cross-section
         if makexsection==1
             if makemap==0;figure(900+regloop);clf;hold on;end
-            %subplot(1,2,2);set(gca,'Position',[0.63 0.1 0.35 0.8]);
 
             xsectioncity1lat=x1lat;xsectioncity1lon=x1lon;
             xsectioncity2lat=x2lat;xsectioncity2lon=x2lon;
@@ -1481,7 +1249,6 @@ if producefigs==1
             clear uniquebigu;clear uniquebigv;clear uniquebigw;clear uniquebigz_ml;clear uniquebigghofsfc;
             
             %Plot for the cross-section
-            %invalid=w_thisxsection==0;w_thisxsection(invalid)=NaN;
             w_thisxsection=w_thisxsection';w_thisxsection=-1.*w_thisxsection;
             ql_thisxsection=ql_thisxsection';
             mse_thisxsection=mse_thisxsection';
